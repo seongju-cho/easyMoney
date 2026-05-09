@@ -41,6 +41,21 @@ def rsi(series: pd.Series, length: int = 14) -> pd.Series:
     return out
 
 
+def atr(df: pd.DataFrame, length: int = 14) -> pd.Series:
+    """Wilder ATR on raw OHLC (not Heikin-Ashi)."""
+    h = df["high"]
+    l = df["low"]
+    c = df["close"]
+    prev_close = c.shift(1)
+    tr = pd.concat([
+        (h - l),
+        (h - prev_close).abs(),
+        (l - prev_close).abs(),
+    ], axis=1).max(axis=1)
+    # Wilder smoothing
+    return tr.ewm(alpha=1.0 / length, adjust=False, min_periods=length).mean()
+
+
 def stoch_rsi(
     close: pd.Series,
     rsi_length: int = 14,

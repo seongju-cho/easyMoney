@@ -4,13 +4,31 @@ start: "2023-01-01"
 end: "2025-05-09"
 
 initial_capital: 10000
-position_pct: 1.0
 fee_pct: 0.001          # 0.1% per side (round trip 0.2%)
 slippage_pct: 0.0002    # 0.02% adverse on market orders
 
+# Position sizing: notional_pct (qty = equity*position_pct/price)
+# or risk_pct (qty = equity*risk_pct/sl_distance) — risk_pct keeps loss
+# per trade ~constant across stop modes.
+sizing_mode: notional_pct
+position_pct: 1.0
+risk_pct: 0.01
+
+# Stop mode: pct uses fixed % of entry; atr uses ATR multiples (variable).
+stop_mode: pct
 sl_pct: 0.015
 tp_pct: 0.03
+atr_length: 14
+atr_sl_mult: 1.5
+atr_tp_mult: 3.0
+
 same_bar_priority: SL   # SL or TP
+
+# Direction filter: both | long_only | short_only
+direction_mode: both
+
+# Exit position when an opposite-direction signal fires (at next bar's open)
+exit_on_opposite_signal: false
 
 ema_length: 200
 stoch_rsi:

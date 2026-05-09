@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from .indicators import ema, heikin_ashi, stoch_rsi
+from .indicators import atr, ema, heikin_ashi, stoch_rsi
 
 
 def build_signals(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
@@ -10,6 +10,7 @@ def build_signals(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     evaluated at the bar's close. Execution should happen at the next bar's open."""
     df = heikin_ashi(df)
     df["ema200"] = ema(df["close"], cfg["ema_length"])
+    df["atr"] = atr(df, int(cfg.get("atr_length", 14)))
 
     sr_cfg = cfg["stoch_rsi"]
     sr = stoch_rsi(
@@ -50,5 +51,12 @@ def build_signals(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     sig[long_cond] = "long"
     # short_cond wins if both somehow trigger on the same bar (impossible: golden xor dead)
     sig[short_cond] = "short"
+
+    direction = str(cfg.get("direction_mode", "both")).lower()
+    if direction == "long_only":
+        sig[sig == "short"] = None
+    elif direction == "short_only":
+        sig[sig == "long"] = None
+
     df["signal"] = sig
     return df
