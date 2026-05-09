@@ -2,19 +2,31 @@
 setlocal EnableExtensions
 
 REM ---- Self-bootstrapping one-shot runner (Windows) ----
-REM Usage:  run_backtest.bat [--refresh] [--config other.yaml] [--clean]
+REM Usage:  run_backtest.bat [--clean] [--refresh] [--config other.yaml]
 
 set "VENV=.venv"
 set "VPY=%VENV%\Scripts\python.exe"
 
-REM --clean: nuke venv and rebuild
+REM 1) Parse args: pull --clean out, forward the rest to main.py
+set "CLEAN=0"
+set "ARGS="
+:parse
+if "%~1"=="" goto :endparse
 if /I "%~1"=="--clean" (
+    set "CLEAN=1"
+) else (
+    set "ARGS=%ARGS% %1"
+)
+shift
+goto :parse
+:endparse
+
+if "%CLEAN%"=="1" (
     echo [setup] Removing existing venv...
     if exist "%VENV%" rmdir /S /Q "%VENV%"
-    shift
 )
 
-REM 1) Pick a Python to bootstrap with. Prefer py launcher (3.13 -> 3.12 -> 3.11 -> 3.10 -> any 3.x)
+REM 2) Pick a Python: prefer py launcher with 3.13 -> 3.12 -> 3.11 -> 3.10
 set "PY="
 where py >nul 2>nul
 if %errorlevel%==0 (
@@ -36,7 +48,7 @@ if %errorlevel%==0 (
 echo [setup] Bootstrap Python: %PY%
 %PY% -c "import sys; print('         version:', sys.version.split()[0])"
 
-REM 2) Create venv if missing
+REM 3) Create venv if missing
 if not exist "%VPY%" (
     echo [setup] Creating venv at %VENV% ...
     %PY% -m venv "%VENV%"
@@ -46,7 +58,7 @@ if not exist "%VPY%" (
     )
 )
 
-REM 3) Verify deps; install if any missing. Use venv python DIRECTLY (no activate).
+REM 4) Verify deps; install if missing. Use venv python directly (no activate).
 "%VPY%" -c "import pandas, numpy, requests, yaml, matplotlib, tabulate" 2>nul
 if errorlevel 1 (
     echo [setup] Installing requirements into venv...
@@ -69,6 +81,6 @@ if errorlevel 1 (
     )
 )
 
-REM 4) Run the backtest with venv python
-"%VPY%" -m src.main --config config.yaml %*
+REM 5) Run the backtest
+"%VPY%" -m src.main --config config.yaml%ARGS%
 endlocal
