@@ -17,6 +17,8 @@ class Trade:
     pnl: float
     pnl_pct: float
     bars_held: int
+    stoch_k_signal: float
+    stoch_d_signal: float
 
 
 def run_backtest(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -48,6 +50,8 @@ def run_backtest(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, pd.DataFram
     c = df["close"].to_numpy()
     ts = df["timestamp"].to_numpy()
     sig = df["signal"].to_numpy()
+    sk = df["stoch_k"].to_numpy() if "stoch_k" in df.columns else None
+    sd = df["stoch_d"].to_numpy() if "stoch_d" in df.columns else None
 
     trades: list[Trade] = []
     equity_curve_ts = []
@@ -60,7 +64,9 @@ def run_backtest(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, pd.DataFram
     tp_price = 0.0
     qty = 0.0
     entry_idx = -1
+    signal_idx = -1
     pending_signal = None
+    pending_signal_idx = -1
 
     n = len(df)
     for i in range(n):
@@ -81,8 +87,10 @@ def run_backtest(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, pd.DataFram
             entry_price = fill
             side = pending_signal
             entry_idx = i
+            signal_idx = pending_signal_idx
             in_position = True
             pending_signal = None
+            pending_signal_idx = -1
 
         # 2) Check SL/TP within this bar
         if in_position:
@@ -130,6 +138,8 @@ def run_backtest(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, pd.DataFram
                     pnl=pnl_net,
                     pnl_pct=pnl_pct,
                     bars_held=i - entry_idx,
+                    stoch_k_signal=float(sk[signal_idx]) if sk is not None else float("nan"),
+                    stoch_d_signal=float(sd[signal_idx]) if sd is not None else float("nan"),
                 ))
                 in_position = False
                 side = None
@@ -139,6 +149,7 @@ def run_backtest(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, pd.DataFram
             s = sig[i]
             if s in ("long", "short"):
                 pending_signal = s
+                pending_signal_idx = i
 
         # 4) Mark-to-market equity for the curve
         if in_position:

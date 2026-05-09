@@ -18,6 +18,11 @@ stoch_rsi:
   stoch_length: 14
   k_smooth: 3
   d_smooth: 3
+  # Zone filter: only take golden cross when D <= oversold,
+  # and dead cross when D >= overbought. Set use_zone_filter: false to disable.
+  use_zone_filter: true
+  oversold: 20
+  overbought: 80
 
 # wick tolerance to absorb floating point noise
 wick_tolerance: 1.0e-9

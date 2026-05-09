@@ -37,6 +37,15 @@ def build_signals(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     long_cond = (df["close"] > df["ema200"]) & golden & bullish & no_lower_wick
     short_cond = (df["close"] < df["ema200"]) & dead & bearish & no_upper_wick
 
+    # Zone filter: only accept crosses originating in the extreme zone of Stoch RSI.
+    # D (slower line) is used because at the cross K has already moved; D being deep
+    # in the zone confirms the cross truly happened in oversold/overbought territory.
+    if sr_cfg.get("use_zone_filter", False):
+        oversold = float(sr_cfg.get("oversold", 20))
+        overbought = float(sr_cfg.get("overbought", 80))
+        long_cond = long_cond & (df["stoch_d"] <= oversold)
+        short_cond = short_cond & (df["stoch_d"] >= overbought)
+
     sig = pd.Series(index=df.index, dtype="object")
     sig[long_cond] = "long"
     # short_cond wins if both somehow trigger on the same bar (impossible: golden xor dead)
