@@ -17,19 +17,35 @@ BTC/USDT 1H 전략 백테스터. Windows에서 바로 동작.
 **청산**: 손절 -1.5%, 익절 +3% 고정. 한 봉에서 둘 다 닿으면 손절 우선 (보수).
 **체결 모델**: 신호 봉 종가에 평가 → **다음 봉 시가** 진입(룩어헤드 방지). 슬리피지는 진입과 SL 체결에 불리하게 적용, TP는 지정가 정확 체결.
 
-## Windows 설치
+## Windows 실행 (one-liner)
 
-1. Python 3.10+ 설치 (https://www.python.org/downloads/)
-2. 프로젝트 폴더에서:
-   ```
-   setup.bat
-   ```
-3. 백테스트 실행:
-   ```
-   run_backtest.bat
-   ```
-4. 결과는 `results/` 폴더 (`summary.txt`, `trades.csv`, `equity.csv`, `equity_curve.png`, `signals.png`)
+Python 3.10+ 만 설치되어 있으면 됩니다 (https://www.python.org/downloads/, `Add to PATH` 체크).
 
+프로젝트 폴더에서:
+
+```
+run_backtest.bat
+```
+
+끝. 첫 실행 시 자동으로 venv 생성 + 의존성 설치 + 백테스트까지 돌립니다. 두 번째부터는 바로 백테스트만 실행됩니다.
+
+옵션:
+```
+run_backtest.bat --refresh           REM 데이터 캐시 무시하고 재다운로드
+run_backtest.bat --config other.yaml
+```
+
+**완전히 처음부터 (clone + run) 한 줄 (PowerShell):**
+```powershell
+git clone <repo-url> easyMoney; cd easyMoney; .\run_backtest.bat
+```
+
+**cmd:**
+```
+git clone <repo-url> easyMoney && cd easyMoney && run_backtest.bat
+```
+
+결과는 `results/` 폴더 (`summary.txt`, `trades.csv`, `equity.csv`, `equity_curve.png`, `signals.png`).
 데이터는 Binance public REST API에서 자동 다운로드되어 `data/`에 캐시됩니다 (API 키 불필요).
 
 ## 설정 (`config.yaml`)
@@ -56,8 +72,7 @@ stoch_rsi: { rsi_length: 14, stoch_length: 14, k_smooth: 3, d_smooth: 3 }
 easyMoney/
 ├── config.yaml
 ├── requirements.txt
-├── setup.bat
-├── run_backtest.bat
+├── run_backtest.bat     # self-bootstrapping: venv + deps + run
 ├── data/                # OHLCV 캐시 (parquet)
 ├── results/             # 백테스트 산출물
 └── src/
