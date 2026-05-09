@@ -19,7 +19,8 @@ BTC/USDT 1H 전략 백테스터. Windows에서 바로 동작.
 
 ## Windows 실행 (one-liner)
 
-Python 3.10+ 만 설치되어 있으면 됩니다 (https://www.python.org/downloads/, `Add to PATH` 체크).
+Python **3.10–3.13** 권장 (https://www.python.org/downloads/, `Add to PATH` 체크).
+Python 3.14는 일부 휠이 아직 미배포일 수 있어 추천하지 않습니다.
 
 프로젝트 폴더에서:
 
@@ -33,7 +34,13 @@ run_backtest.bat
 ```
 run_backtest.bat --refresh           REM 데이터 캐시 무시하고 재다운로드
 run_backtest.bat --config other.yaml
+run_backtest.bat --clean             REM .venv 삭제 후 처음부터 재설치
 ```
+
+### 문제 해결
+
+- **`ModuleNotFoundError: No module named 'pandas'`** → Python 버전이 너무 새 것이거나 venv가 깨진 경우. `run_backtest.bat --clean` 으로 재설치. 그래도 안 되면 Python 3.13 설치 후 재시도.
+- 스크립트는 `py` 런처가 있으면 **3.13 → 3.12 → 3.11 → 3.10** 순으로 자동 선택합니다.
 
 **완전히 처음부터 (clone + run) 한 줄 (PowerShell):**
 ```powershell

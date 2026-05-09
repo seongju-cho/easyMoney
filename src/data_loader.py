@@ -93,6 +93,18 @@ def fetch_klines(symbol: str, interval: str, start: str, end: str) -> pd.DataFra
     return df
 
 
+def _has_parquet() -> bool:
+    try:
+        import pyarrow  # noqa: F401
+        return True
+    except ImportError:
+        try:
+            import fastparquet  # noqa: F401
+            return True
+        except ImportError:
+            return False
+
+
 def load_ohlcv(
     symbol: str,
     interval: str,
@@ -103,14 +115,24 @@ def load_ohlcv(
 ) -> pd.DataFrame:
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
-    cache_path = cache_dir / f"{symbol}_{interval}_{start}_{end}.parquet"
+    base = f"{symbol}_{interval}_{start}_{end}"
+    parquet_path = cache_dir / f"{base}.parquet"
+    csv_path = cache_dir / f"{base}.csv"
 
-    if cache_path.exists() and not refresh:
-        return pd.read_parquet(cache_path)
+    if not refresh:
+        if _has_parquet() and parquet_path.exists():
+            return pd.read_parquet(parquet_path)
+        if csv_path.exists():
+            df = pd.read_csv(csv_path)
+            df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
+            return df
 
     df = fetch_klines(symbol, interval, start, end)
-    try:
-        df.to_parquet(cache_path, index=False)
-    except Exception:
-        df.to_csv(cache_path.with_suffix(".csv"), index=False)
+    if _has_parquet():
+        try:
+            df.to_parquet(parquet_path, index=False)
+        except Exception:
+            df.to_csv(csv_path, index=False)
+    else:
+        df.to_csv(csv_path, index=False)
     return df
