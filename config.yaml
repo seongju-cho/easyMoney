@@ -3,6 +3,9 @@ timeframe: 1h
 start: "2023-01-01"
 end: "2025-05-09"
 
+# Strategy: ha_stoch_rsi | donchian_breakout | bb_reversion
+strategy_name: ha_stoch_rsi
+
 initial_capital: 10000
 fee_pct: 0.001          # 0.1% per side (round trip 0.2%)
 slippage_pct: 0.0002    # 0.02% adverse on market orders
@@ -31,6 +34,17 @@ direction_mode: both
 exit_on_opposite_signal: false
 
 ema_length: 200
+
+# Donchian breakout (trend-following) params
+donchian:
+  length: 20
+  use_ema_filter: true
+
+# Bollinger Band reversion (mean-reversion) params
+bb:
+  length: 20
+  std: 2.0
+  use_ema_filter: false
 stoch_rsi:
   rsi_length: 14
   stoch_length: 14

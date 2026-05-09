@@ -34,6 +34,14 @@ def variants(base: dict) -> list[tuple[str, dict]]:
                 c[k] = v
         return name, c
 
+    mode = (base.get("compare_mode") or "ablation").lower()
+    if mode == "strategies":
+        out.append(derive("ha_stoch_rsi (zone filter on)", strategy_name="ha_stoch_rsi"))
+        out.append(derive("donchian_breakout (20)", strategy_name="donchian_breakout"))
+        out.append(derive("bb_reversion (20, 2.0)", strategy_name="bb_reversion"))
+        return out
+
+    # default: parameter ablation on the current strategy
     out.append(derive("0_baseline (zone filter)"))
     out.append(derive("1_long_only", direction_mode="long_only"))
     out.append(derive("2_atr_stops", stop_mode="atr"))
@@ -78,9 +86,13 @@ def main():
     ap.add_argument("--config", default="config.yaml")
     ap.add_argument("--results", default="results_compare")
     ap.add_argument("--refresh", action="store_true")
+    ap.add_argument("--mode", choices=["ablation", "strategies"], default="ablation",
+                    help="ablation: vary one knob at a time on current strategy. "
+                         "strategies: compare different strategy_name values.")
     args = ap.parse_args()
 
     base = yaml.safe_load(Path(args.config).read_text())
+    base["compare_mode"] = args.mode
     print(f"Loading {base['symbol']} {base['timeframe']} {base['start']} -> {base['end']}")
     df_raw = load_ohlcv(base["symbol"], base["timeframe"], base["start"], base["end"], refresh=args.refresh)
     print(f"  {len(df_raw)} bars")
